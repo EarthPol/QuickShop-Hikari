@@ -60,7 +60,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -240,14 +239,14 @@ public final class Main extends CompatibilityModule implements Listener {
   public void purgeShops(@NotNull final WorldCoord worldCoord, @Nullable final UUID owner, @Nullable final UUID deleter, @NotNull final String reason, final boolean overrideOwner) {
     //Getting all shop with world-chunk-shop mapping
     for(final Shop shop : api.getShopManager().getAllShops()) {
-      if(!Objects.equals(shop.getLocation().getWorld(), worldCoord.getBukkitWorld())) {
+      if(!WorldCoord.parseWorldCoord(shop.getLocation()).equals(worldCoord)) {
         continue;
       }
-      if(WorldCoord.parseWorldCoord(shop.getLocation()).equals(worldCoord)) {
-        if(overrideOwner || owner != null && owner.equals(shop.getOwner().getUniqueId())) {
+      if(overrideOwner || owner != null && owner.equals(shop.getOwner().getUniqueId())) {
+        Util.regionThread(shop.getLocation(), ()->{
           recordDeletion(QUserImpl.createFullFilled(CommonUtil.getNilUniqueId(), "Towny", false), shop, reason);
           getApi().getShopManager().deleteShop(shop);
-        }
+        });
       }
     }
   }
